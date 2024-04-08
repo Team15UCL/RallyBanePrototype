@@ -1,0 +1,200 @@
+{
+	"attrs": {
+		"width": 1295,
+		"height": 600
+	},
+	"className": "Stage",
+	"children": [
+		{
+			"attrs": {},
+			"className": "Layer",
+			"children": [
+				{
+					"attrs": {
+						"opacity": 0.3,
+						"id": "background",
+						"width": 1095,
+						"height": 500
+					},
+					"className": "Image"
+				}
+			]
+		},
+		{
+			"attrs": {},
+			"className": "Layer",
+			"children": [
+				{
+					"attrs": {
+						"fill": "black",
+						"x": 831.9999999999989,
+						"y": 64.0000000000004,
+						"points": [ 0, 100, 0, 0 ],
+						"pointerLength": 12,
+						"pointerWidth": 12,
+						"stroke": "black",
+						"draggable": true,
+						"rotation": -90.00000000000018,
+						"scaleX": 0.9999999999999982,
+						"scaleY": 1.000000000000005,
+						"skewX": -4.996003610813361e-16
+					},
+					"className": "Arrow"
+				},
+				{
+					"attrs": {
+						"rotationSnaps": [ 0, 90, 180, 270, 45, 135, 225, 315 ],
+						"rotationSnapTolerance": 15,
+						"enabledAnchors": [ "bottom-center", "top-center" ],
+						"x": 577.0000000000006,
+						"y": 265
+					},
+					"className": "Transformer"
+				},
+				{
+					"attrs": {
+						"x": 959,
+						"y": 40,
+						"id": "start",
+						"name": "hej",
+						"width": 100,
+						"height": 50,
+						"draggable": true
+					},
+					"className": "Image"
+				},
+				{
+					"attrs": {
+						"x": 455,
+						"y": 232,
+						"id": "mål",
+						"name": "hej",
+						"width": 100,
+						"height": 50,
+						"draggable": true
+					},
+					"className": "Image"
+				},
+				{
+					"attrs": {
+						"x": 710,
+						"y": 229,
+						"id": "/Images/Øvelse3.png",
+						"name": "Øvelse3",
+						"width": 100,
+						"height": 50,
+						"draggable": true
+					},
+					"className": "Image"
+				},
+				{
+					"attrs": {
+						"x": 713,
+						"y": 40,
+						"id": "/Images/Øvelse4.png",
+						"name": "Øvelse4",
+						"width": 100,
+						"height": 50,
+						"draggable": true
+					},
+					"className": "Image"
+				},
+				{
+					"attrs": {
+						"x": 1100,
+						"y": 250,
+						"id": "/Images/Øvelse5.png",
+						"name": "Øvelse5",
+						"width": 100,
+						"height": 50,
+						"draggable": true
+					},
+					"className": "Image"
+				},
+				{
+					"attrs": {
+						"x": 1100,
+						"y": 310,
+						"id": "/Images/Øvelse6.png",
+						"name": "Øvelse6",
+						"width": 100,
+						"height": 50,
+						"draggable": true
+					},
+					"className": "Image"
+				},
+				{
+					"attrs": {
+						"x": 1100,
+						"y": 370,
+						"id": "/Images/Øvelse7.png",
+						"name": "Øvelse7",
+						"width": 100,
+						"height": 50,
+						"draggable": true
+					},
+					"className": "Image"
+				},
+				{
+					"attrs": {
+						"x": 1100,
+						"y": 430,
+						"id": "/Images/Øvelse8.png",
+						"name": "Øvelse8",
+						"width": 100,
+						"height": 50,
+						"draggable": true
+					},
+					"className": "Image"
+				},
+				{
+					"attrs": {
+						"fill": "black",
+						"x": 761.0000000000007,
+						"y": 211.0000000000001,
+						"points": [ 0, 100, 0, 0 ],
+						"pointerLength": 12,
+						"pointerWidth": 12,
+						"stroke": "black",
+						"draggable": true,
+						"rotation": 180,
+						"scaleX": 0.9999999999999987,
+						"scaleY": 0.9999999999999991,
+						"skewX": -3.3306690738754884e-16
+					},
+					"className": "Arrow"
+				},
+				{
+					"attrs": {
+						"fill": "black",
+						"x": 583.0000000000006,
+						"y": 254.99999999999994,
+						"points": [ 0, 100, 0, 0 ],
+						"pointerLength": 12,
+						"pointerWidth": 12,
+						"stroke": "black",
+						"draggable": true,
+						"rotation": -90,
+						"scaleX": 0.9999999999999984,
+						"scaleY": 0.9999999999999986,
+						"skewX": 1.110223024625157e-16
+					},
+					"className": "Arrow"
+				},
+				{
+					"attrs": {
+						"fill": "black",
+						"x": 1250,
+						"y": 20,
+						"points": [ 0, 100, 0, 0 ],
+						"pointerLength": 12,
+						"pointerWidth": 12,
+						"stroke": "black",
+						"draggable": true
+					},
+					"className": "Arrow"
+				}
+			]
+		}
+	]
+}
