@@ -7,8 +7,7 @@
 
 <input type="hidden" id="baneURL" value="@ViewData["BaneImage"]"/>
 
-<div class="" id="bane">
-    
+<div id="bane">
 </div>
 
 <button onclick="DeleteNode()">Slet</button>
@@ -16,5 +15,6 @@
 <script type="text/javascript">
     const myVar = @Html.Raw(Json.Serialize(Model));
 </script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/konva@9/konva.min.js"></script>
-<script src="/js/JavaScript.js"></script>
+<script type="module" asp-append-version="true" src="/js/JavaScript.js"></script>

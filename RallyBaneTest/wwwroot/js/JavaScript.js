@@ -1,5 +1,21 @@
-﻿var imageData = document.getElementById("baneURL").value;
-console.log(imageData);
+﻿axios.post("https://localhost:7213/nodes", {
+	id: 3,
+	url: "test",
+	x: 100,
+	y: 100
+})
+	.then(function (response) {
+		console.log(response);
+	})
+	.catch(function (error) {
+		console.log(error);
+	});
+
+axios.get("https://localhost:7213/nodes").then(function (response) {
+	console.log(response);
+});
+
+var imageData = document.getElementById("baneURL").value;
 console.log(myVar);
 
 var stage = new Konva.Stage({
@@ -29,7 +45,7 @@ stage.add(backgroundLayer);
 stage.add(exerciseLayer);
 stage.add(trackLayer);
 
-Konva.Image.fromURL(`${imageData}`, (background) => {
+Konva.Image.fromURL("/Images/Bane.png", (background) => {
 	background.setAttrs({
 		x: 1,
 		y: 50,
@@ -54,14 +70,17 @@ var arrow = new Konva.Arrow({
 	strokeWidth: 4,
 	draggable: true,
 	fillAfterStrokeEnabled: true,
+	hitStrokeWidth: 20,
 });
 exerciseLayer.add(arrow);
 
 arrow.on("mouseover", () => {
 	arrow.fill("white");
+	document.body.style.cursor = "pointer";
 });
 arrow.on("mouseout", () => {
 	arrow.fill("black");
+	document.body.style.cursor = "default";
 });
 
 arrow.on("dragstart", function () {
@@ -76,9 +95,11 @@ arrow.on("dragstart", function () {
 	clone.off("dragstart mouseover mouseout");
 	clone.on("mouseover", () => {
 		clone.fill("white");
+		document.body.style.cursor = "pointer";
 	});
 	clone.on("mouseout", () => {
 		clone.fill("black");
+		document.body.style.cursor = "default";
 	});
 	clone.on("dragend", () => {
 		clone.opacity(1);
@@ -132,7 +153,6 @@ stage.on("click tap", function (e) {
 		e.target.className === "Image" &&
 		e.target.getLayer().getName() === "trackLayer"
 	) {
-		console.log(e.target.getLayer());
 		trImage.nodes([e.target]);
 		return;
 	}
@@ -140,12 +160,12 @@ stage.on("click tap", function (e) {
 
 let selectedNode;
 function DeleteNode() {
-	if (selectedNode.getLayer().getName() === "trackLayer") {
+	if (selectedNode != undefined && selectedNode.getLayer().getName() === "trackLayer") {
 		selectedNode.destroy();
 		tr.nodes([]);
 		trImage.nodes([]);
 	}
-	console.log(selectedNode.getLayer());
+	console.log(trackLayer.getChildren());
 }
 
 myVar.forEach((element) => {
@@ -165,10 +185,12 @@ myVar.forEach((element) => {
 
 		exercise.on("mouseover", () => {
 			exercise.strokeEnabled(true);
+			document.body.style.cursor = "pointer";
 		});
 
 		exercise.on("mouseout", () => {
 			exercise.strokeEnabled(false);
+			document.body.style.cursor = "default";
 		});
 
 		exercise.on("dragstart", function () {
@@ -184,10 +206,12 @@ myVar.forEach((element) => {
 
 			clone.on("mouseover", () => {
 				clone.strokeEnabled(true);
+				document.body.style.cursor = "pointer";
 			});
 
 			clone.on("mouseout", () => {
 				clone.strokeEnabled(false);
+				document.body.style.cursor = "default";
 			});
 
 			clone.on("dragend", () => {
