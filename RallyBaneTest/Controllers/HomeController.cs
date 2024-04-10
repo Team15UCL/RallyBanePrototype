@@ -24,43 +24,43 @@ public class HomeController : Controller
         {
             Name = "Mål",
             ImageString = "/Images/Mål.png",
-            Position = new() { X = 1100, Y = 70 }
+            Position = new() { X = 1100, Y = 90 }
         };
         Exercise exercise3 = new()
         {
             Name = "Øvelse3",
             ImageString = "/Images/Øvelse3.png",
-            Position = new Position() { X = 1100, Y = 130 }
+            Position = new Position() { X = 1100, Y = 170 }
         };
         Exercise exercise4 = new()
         {
             Name = "Øvelse4",
             ImageString = "/Images/Øvelse4.png",
-            Position = new Position() { X = 1100, Y = 190 }
+            Position = new Position() { X = 1100, Y = 250 }
         };
         Exercise exercise5 = new()
         {
             Name = "Øvelse5",
             ImageString = "/Images/Øvelse5.png",
-            Position = new Position() { X = 1100, Y = 250 }
+            Position = new Position() { X = 1100, Y = 330 }
         };
         Exercise exercise6 = new()
         {
             Name = "Øvelse6",
             ImageString = "/Images/Øvelse6.png",
-            Position = new Position() { X = 1100, Y = 310 }
+            Position = new Position() { X = 1100, Y = 410 }
         };
         Exercise exercise7 = new()
         {
             Name = "Øvelse7",
             ImageString = "/Images/Øvelse7.png",
-            Position = new Position() { X = 1100, Y = 370 }
+            Position = new Position() { X = 1100, Y = 490 }
         };
         Exercise exercise8 = new()
         {
             Name = "Øvelse8",
             ImageString = "/Images/Øvelse8.png",
-            Position = new Position() { X = 1100, Y = 430 }
+            Position = new Position() { X = 1210, Y = 170 }
         };
 
         List<Exercise> exercises =

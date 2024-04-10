@@ -2,13 +2,19 @@
 
 @{
     ViewData["Title"] = "Home Page";
-    ViewData["BaneImage"] = "/Images/Bane.png";
 }
 
-<input type="hidden" id="baneURL" value="@ViewData["BaneImage"]"/>
-
-<div id="bane">
-</div>
+<main>
+    <div id="exercises" style="float:right">
+        <img src="/Images/Start.png" height="70" width="100" draggable="true"/>
+        <img src="/Images/Mål.png" height="70" width="100" draggable="true"/>
+        <img src="/Images/Øvelse3.png" height="70" width="100" draggable="true"/>
+        <img src="/Images/Øvelse4.png" height="70" width="100" draggable="true"/>
+        <img src="/Images/Øvelse5.png" height="70" width="100" draggable="true"/>
+    </div>
+    <div id="bane">
+    </div>
+</main>
 
 <button onclick="DeleteNode()">Slet</button>
 

@@ -1,9 +1,10 @@
-﻿axios.post("https://localhost:7213/nodes", {
-	id: 3,
-	url: "test",
-	x: 100,
-	y: 100
-})
+﻿axios
+	.post("https://localhost:7213/nodes", {
+		id: 3,
+		url: "test",
+		x: 100,
+		y: 100,
+	})
 	.then(function (response) {
 		console.log(response);
 	})
@@ -15,13 +16,12 @@ axios.get("https://localhost:7213/nodes").then(function (response) {
 	console.log(response);
 });
 
-var imageData = document.getElementById("baneURL").value;
 console.log(myVar);
 
 var stage = new Konva.Stage({
 	container: "bane",
-	width: 1295,
-	height: 600,
+	width: 1000,
+	height: 500,
 });
 
 window.addEventListener("keydown", function (e) {
@@ -51,8 +51,8 @@ Konva.Image.fromURL("/Images/Bane.png", (background) => {
 		y: 50,
 		opacity: 0.3,
 		id: "background",
-		width: stage.width() - 200,
-		height: stage.height() - 100,
+		width: stage.width() - 500,
+		height: stage.height() - 150,
 		stroke: "black",
 		strokeWidth: 5,
 	});
@@ -103,6 +103,7 @@ arrow.on("dragstart", function () {
 	});
 	clone.on("dragend", () => {
 		clone.opacity(1);
+		tr.nodes([clone]);
 	});
 
 	trackLayer.add(clone);
@@ -135,6 +136,7 @@ stage.on("click tap", function (e) {
 var trImage = new Konva.Transformer({
 	rotationSnaps: [0, 90, 180, 270],
 	rotationSnapTolerance: 45,
+	enabledAnchors: ["top-left", "top-right", "bottom-left", "bottom-right"],
 });
 exerciseLayer.add(trImage);
 tr.nodes([]);
@@ -160,7 +162,11 @@ stage.on("click tap", function (e) {
 
 let selectedNode;
 function DeleteNode() {
-	if (selectedNode != undefined && selectedNode.getLayer().getName() === "trackLayer") {
+	if (
+		selectedNode != undefined &&
+		selectedNode.getLayer().getName() === "trackLayer"
+	) {
+		console.log(selectedNode);
 		selectedNode.destroy();
 		tr.nodes([]);
 		trImage.nodes([]);
@@ -176,20 +182,20 @@ myVar.forEach((element) => {
 			id: element.imageString,
 			name: element.name,
 			width: 100,
-			height: 50,
+			height: 70,
 			draggable: true,
-			stroke: "black",
-			strokeEnabled: false,
+			stroke: "orange",
+			strokeWidth: 5,
 		});
 		exerciseLayer.add(exercise);
 
 		exercise.on("mouseover", () => {
-			exercise.strokeEnabled(true);
+			exercise.stroke("black");
 			document.body.style.cursor = "pointer";
 		});
 
 		exercise.on("mouseout", () => {
-			exercise.strokeEnabled(false);
+			exercise.stroke("orange");
 			document.body.style.cursor = "default";
 		});
 
@@ -216,6 +222,7 @@ myVar.forEach((element) => {
 
 			clone.on("dragend", () => {
 				clone.opacity(1);
+				trImage.nodes([clone]);
 			});
 
 			trackLayer.add(clone);
