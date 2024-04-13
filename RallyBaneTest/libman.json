@@ -7,5 +7,15 @@
   "library": "axios@1.6.8",
   "destination": "wwwroot/lib/axios/"
 }
+,
+{
+  "provider": "unpkg",
+  "library": "konva@9.3.6",
+  "destination": "wwwroot/konva/",
+  "files": [
+    "konva.min.js",
+    "konva.js"
+  ]
+}
 ]
 }

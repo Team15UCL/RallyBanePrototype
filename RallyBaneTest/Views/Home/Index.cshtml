@@ -1,26 +1,133 @@
 ﻿@model List<RallyBaneTest.Models.Exercise>;
 
 @{
-    ViewData["Title"] = "Home Page";
+	Layout = null;
 }
 
-<main>
-    <div id="exercises" style="float:right">
-        <img src="/Images/Start.png" height="70" width="100" draggable="true"/>
-        <img src="/Images/Mål.png" height="70" width="100" draggable="true"/>
-        <img src="/Images/Øvelse3.png" height="70" width="100" draggable="true"/>
-        <img src="/Images/Øvelse4.png" height="70" width="100" draggable="true"/>
-        <img src="/Images/Øvelse5.png" height="70" width="100" draggable="true"/>
-    </div>
-    <div id="bane">
-    </div>
-</main>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Rally Bane</title>
 
-<button onclick="DeleteNode()">Slet</button>
+	<script src="/konva/konva.min.js"></script>
+	<script src="/lib/axios/dist/axios.min.js"></script>
+</head>
+<body style="background-color:dimgray">
+	<div id="stage-parent">
+		<div id="leftlist" class="track">
+			<h4>Guide:</h4>
+			<p>Træk øvelserne fra højre ind på banen for at tilføje</p>
+			<p>Dobbelklik på banen for at tilføje en pil</p>
+			<p>Alle objekter kan roteres ved at klikke på dem</p>
+			<p>Slet et objekt ved brug af højrekliks menuen</p>
+			<hr />
+			<p>Gem den nuværende bane med denne knap:</p>
+			<input type="text" placeholder="Vælg navn på bane" id="postName"/>
+			<button onclick="saveTrack()">Gem bane</button>
+			<p>Hent en bane ved at søge efter navn:</p>
+			<input type="text" placeholder="Søg efter bane navn" id="getName"/>
+			<button onclick="fetchTrack()">Hent Bane</button>
+		</div>
+		<div class="track" id="bane">
+		</div>
 
-<script type="text/javascript">
-    const myVar = @Html.Raw(Json.Serialize(Model));
-</script>
-<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
-<script src="https://unpkg.com/konva@9/konva.min.js"></script>
-<script type="module" asp-append-version="true" src="/js/JavaScript.js"></script>
+		<div id="rightlist" class="track">
+			<h3>Øvelser</h3>
+			<div id="exercises" class="grid-container" style="">
+				<img class="exercise" src="/Images/Start.png" height="52,5" width="75" draggable="true" />
+				<img class="exercise" src="/Images/Mål.png" height="52,5" width="75" draggable="true" />
+				@foreach (var item in Model)
+				{
+					<img class="exercise" src="@Html.DisplayFor(x => item.Url)" height="52,5" width="75" draggable="true" />
+				}
+
+				@* 
+				<img class="exercise" src="/Images/Øvelse3.png" height="70" width="100" draggable="true" />
+				<img class="exercise" src="/Images/Øvelse4.png" height="70" width="100" draggable="true" />
+				<img class="exercise" src="/Images/Øvelse5.png" height="70" width="100" draggable="true" />
+				<img class="exercise" src="/Images/Øvelse6.png" height="70" width="100" draggable="true" />
+				<img class="exercise" src="/Images/Øvelse7.png" height="70" width="100" draggable="true" />
+				<img class="exercise" src="/Images/Øvelse8.png" height="70" width="100" draggable="true" /> *@
+			</div>
+		</div>
+	</div>
+
+	
+
+	<div id="menu">
+		<div>
+			<button id="delete-button">Slet</button>
+		</div>
+	</div>
+
+	<style>
+		.exercise {
+			margin: 1px;
+			cursor: move;
+		}
+
+		.grid-container {
+			overflow-y: auto;
+			max-height: 75vh;
+			display: grid;
+			grid-template-columns: auto auto auto;
+		}
+
+		#stage-parent {
+			margin-top: 50px;
+			display: grid;
+			grid-template-columns: 10% auto 13%;
+			justify-content: space-evenly;
+			align-items: center;
+		}
+
+		#bane {
+			width: auto;
+			border-color: black;
+			border-width: thin;
+			border: ridge;
+			background-color: white;
+			overflow: auto;
+		}
+
+		.track {
+			box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+		}
+
+		#leftlist, #rightlist {
+			background-color: rgba(253, 246, 237, 0.5);
+			text-align: center;
+		}
+
+		#menu {
+			display: none;
+			position: absolute;
+			width: 60px;
+			background-color: white;
+			box-shadow: 0 0 5px grey;
+			border-radius: 3px;
+		}
+
+			#menu button {
+				width: 100%;
+				background-color: white;
+				border: none;
+				margin: 0;
+				padding: 10px;
+			}
+
+				#menu button:hover {
+					background-color: lightgray;
+				}
+	</style>
+
+	
+	
+	<script type="text/javascript">
+		const myVar = @Html.Raw(Json.Serialize(Model));
+	</script>
+	<script src="/js/JavaScript.js"></script>
+</body>
+</html>

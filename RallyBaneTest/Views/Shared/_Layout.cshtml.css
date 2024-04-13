@@ -46,3 +46,9 @@ button.accept-policy {
   white-space: nowrap;
   line-height: 60px;
 }
+
+.container {
+	max-width: 100vw;
+	background-color: dimgray;
+	padding: 0;
+}
