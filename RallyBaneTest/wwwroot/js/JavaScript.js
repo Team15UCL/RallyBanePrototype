@@ -1,12 +1,10 @@
-﻿function handleDragStart(e) {
-	this.style.opacity = "0.4";
-}
+﻿//#region drag&drop DOM objects
+var itemUrl = "";
+document.getElementById("exercises").addEventListener("dragstart", (e) => {
+	itemUrl = e.target.src;
+});
 
-function handleDragEnd(e) {
-	this.style.opacity = "1";
-}
-
-let items = document.querySelectorAll(".exercises .exercise");
+let items = document.querySelectorAll(".exercise");
 items.forEach(function (item) {
 	item.addEventListener("dragstart", () => {
 		item.style.opacity = "0.4";
@@ -16,30 +14,43 @@ items.forEach(function (item) {
 	});
 });
 
-// axios
-// 	.post("https://localhost:7213/tracks", {
-// 		url: "test",
-// 		x: 100,
-// 		y: 100,
-// 	})
-// 	.then(function (response) {
-// 		console.dir(response.data);
-// 	})
-// 	.catch(function (error) {
-// 		console.log(error);
-// 	});
-
-// dragtest
-var itemUrl = "";
-document.getElementById("exercises").addEventListener("dragstart", (e) => {
-	itemUrl = e.target.src;
+document.getElementById("bane").addEventListener("ondragenter", () => {
+	window.style.cursor = "no-drop";
 });
 
-let stageSize = window.innerWidth * 0.66;
+document.getElementById("bane").addEventListener("ondragleave", () => {
+	window.style.cursor = "default";
+});
+//#endregion
+
+let stageSize = { x: 1260, y: 820 };
 const GUIDELINE_OFFSET = 5;
 var arrowCounter = 1;
 let track = [];
+var labelcounter = 0;
 
+var stage = new Konva.Stage({
+	container: "bane",
+	width: stageSize.x,
+	height: stageSize.y,
+});
+
+var backgroundLayer = new Konva.Layer({
+	name: "backgroundLayer",
+});
+var trackLayer = new Konva.Layer({
+	name: "trackLayer",
+});
+var transformLayer = new Konva.Layer();
+var tooltipLayer = new Konva.Layer({
+	name: "tooltipLayer",
+});
+stage.add(backgroundLayer);
+stage.add(trackLayer);
+stage.add(tooltipLayer);
+stage.add(transformLayer);
+
+// Function for loading track from db
 async function fetchTrack() {
 	trackLayer.destroyChildren();
 	var name = document.getElementById("getName").value;
@@ -47,6 +58,7 @@ async function fetchTrack() {
 	console.log(name);
 	var response = await axios.get(`https://localhost:7213/tracks?name=${name}`);
 	track = response.data.nodes;
+
 	track.forEach((item) => {
 		switch (item.className) {
 			case "Image":
@@ -114,13 +126,7 @@ async function fetchTrack() {
 	});
 }
 
-var stage = new Konva.Stage({
-	container: "bane",
-	width: stageSize,
-	height: stageSize * 0.65,
-});
-
-// drag from DOM into stage
+//#region Create new image when dropping DOM objects on stage
 var con = stage.container();
 con.addEventListener("dragover", (e) => {
 	e.preventDefault();
@@ -129,32 +135,88 @@ con.addEventListener("dragover", (e) => {
 con.addEventListener("drop", (e) => {
 	e.preventDefault();
 	stage.setPointersPositions(e);
+	// var group = new Konva.Group({
+	// 	draggable: true,
+	// });
 
 	Konva.Image.fromURL(itemUrl, (image) => {
 		image.setAttrs({
 			id: itemUrl,
 			width: 90,
 			height: 55,
-			draggable: true,
 			offsetX: 45,
 			offsetY: 27.5,
 			name: "object",
 			stroke: "orange",
 			strokeWidth: 4,
+			draggable: true,
 		});
-		trackLayer.add(image);
+
+		// group.add(image);
 		image.position(stage.getPointerPosition());
 		trImage.nodes([image]);
 
 		image.on("mouseenter", () => {
 			stage.container().style.cursor = "pointer";
+			document.getElementById(image._id.toString()).style.borderColor = "black";
 		});
 
 		image.on("mouseleave", () => {
 			stage.container().style.cursor = "default";
+			document.getElementById(image._id.toString()).style.borderColor = "white";
 		});
+
+		image.on("dragmove", () => {
+			var label = stage.findOne("#" + image._id).getParent();
+			label.position({ x: image.x(), y: image.y() });
+		});
+
+		image.on("transform", () => {
+			var label = stage.findOne("#" + image._id).getParent();
+			label.rotation(image.rotation());
+		});
+
+		routeCount(image);
+
+		if (!itemUrl.includes("Start") && !itemUrl.includes("M%C3%A5l")) {
+			// labeltest
+			var simpleLabel = new Konva.Label({
+				draggable: true,
+				x: image.getAttr("x"),
+				y: image.getAttr("y"),
+				offset: { x: 50, y: 50 },
+			});
+			simpleLabel.add(
+				new Konva.Tag({
+					fill: "yellow",
+					stroke: "black",
+					shadowColor: "black",
+					shadowBlur: 10,
+					shadowOffset: [10, 10],
+					shadowOpacity: 0.2,
+					lineJoin: "round",
+					cornerRadius: 5,
+				})
+			);
+			simpleLabel.add(
+				new Konva.Text({
+					text: exerciseRoute.length,
+					fontFamily: "Calibri",
+					fontSize: 18,
+					fontStyle: "bold",
+					padding: 5,
+					fill: "black",
+					id: image._id.toString(),
+				})
+			);
+			tooltipLayer.add(simpleLabel);
+			console.log(simpleLabel);
+		}
+
+		trackLayer.add(image);
 	});
 });
+//#endregion
 
 window.addEventListener("keydown", function (e) {
 	if (e.key === "Delete") {
@@ -165,17 +227,6 @@ window.addEventListener("keydown", function (e) {
 		}
 	}
 });
-
-var backgroundLayer = new Konva.Layer({
-	name: "backgroundLayer",
-});
-var exerciseLayer = new Konva.Layer();
-var trackLayer = new Konva.Layer({
-	name: "trackLayer",
-});
-stage.add(backgroundLayer);
-stage.add(trackLayer);
-stage.add(exerciseLayer);
 
 Konva.Image.fromURL("/Images/Bane.png", (background) => {
 	background.setAttrs({
@@ -226,7 +277,7 @@ var tr = new Konva.Transformer({
 	enabledAnchors: ["bottom-center"],
 	centeredScaling: true,
 });
-exerciseLayer.add(tr);
+transformLayer.add(tr);
 tr.nodes([]);
 
 stage.on("click tap", function (e) {
@@ -247,9 +298,9 @@ stage.on("click tap", function (e) {
 var trImage = new Konva.Transformer({
 	rotationSnaps: [0, 90, 180, 270],
 	rotationSnapTolerance: 45,
-	enabledAnchors: ["top-left", "top-right", "bottom-left", "bottom-right"],
+	enabledAnchors: [],
 });
-exerciseLayer.add(trImage);
+transformLayer.add(trImage);
 trImage.nodes([]);
 
 stage.on("click tap", function (e) {
@@ -271,31 +322,122 @@ stage.on("click tap", function (e) {
 	}
 });
 
-// function fitStageIntoParentContainer() {
-// 	var containerWidth = window.innerWidth * 0.65;
-// 	var containerHeight = window.innerHeight * 0.8;
-
-// 	var factor = window.innerWidth / 2.5;
-
-// 	var scalex = containerWidth / factor;
-// 	var scaley = containerHeight / factor;
-// 	scalex = scaley = Math.min(scalex, scaley);
-// 	stage.width(containerWidth);
-// 	stage.height(containerHeight);
-// 	stage.scale({ x: scalex, y: scaley });
-// 	// console.log({ factor, scalex });
-// }
-// fitStageIntoParentContainer();
-// window.addEventListener("resize", fitStageIntoParentContainer);
-
 //#region objectMenu
 let currentShape;
 var menuNode = document.getElementById("menu");
 
 document.getElementById("delete-button").addEventListener("click", () => {
+	if (currentShape.className === "Text") {
+		currentShape.getParent().destroy();
+		return;
+	}
+
+	if (
+		currentShape.className != "Arrow" &&
+		currentShape.id().includes("Start") === false &&
+		currentShape.id().includes("M%C3%A5l") === false
+	) {
+		var index = exerciseRoute.findIndex(
+			(item) => item.id() === currentShape.id()
+		);
+		var deleted = exerciseRoute.splice(index, 1);
+		var route = document.getElementById("route");
+		route.removeChild(document.getElementById(deleted[0]._id));
+		reRenderList();
+	}
 	currentShape.destroy();
 	tr.nodes([]);
 	trImage.nodes([]);
+	if (currentShape.className === "Image") {
+		stage
+			.findOne("#" + currentShape._id)
+			.getParent()
+			.destroy();
+		updateNumbers();
+	}
+});
+
+document.getElementById("info-button").addEventListener("click", () => {
+	tooltipLayer.findOne("#tooltipText").text("Beskrivelse af øvelsen her");
+	const { x, y } = currentShape.position();
+	tooltip.position({ x, y: y - 40 });
+	trImage.nodes([]);
+	tooltip.show();
+});
+stage.on("click", () => {
+	tooltip.hide();
+});
+
+document.getElementById("down-button").addEventListener("click", () => {
+	var index = exerciseRoute.findIndex((item) => item._id === currentShape._id);
+	var moved = exerciseRoute.splice(index, 1);
+	exerciseRoute.splice(index + 1, 0, moved[0]);
+
+	var route = document.getElementById("route");
+	while (route.firstChild) {
+		route.removeChild(route.firstChild);
+	}
+	exerciseRoute.forEach((item) => {
+		var div = document.createElement("div");
+		div.className = "countContainer";
+		div.id = item._id;
+
+		var count = document.createElement("p");
+		count.id = "count";
+		count.textContent =
+			1 + exerciseRoute.findIndex((count) => count._id === item._id);
+		div.appendChild(count);
+
+		var image = document.createElement("img");
+		image.src = item.id();
+		image.width = 75;
+		image.height = 52.5;
+		image.style.marginTop = "10px";
+		image.draggable = false;
+		div.appendChild(image);
+
+		route.appendChild(div);
+	});
+
+	updateNumbers();
+});
+
+document.getElementById("up-button").addEventListener("click", () => {
+	if (exerciseRoute.findIndex((item) => item._id === currentShape._id) != 0) {
+		var index = exerciseRoute.findIndex(
+			(item) => item._id === currentShape._id
+		);
+		var moved = exerciseRoute.splice(index, 1);
+		exerciseRoute.splice(index - 1, 0, moved[0]);
+
+		var route = document.getElementById("route");
+		while (route.firstChild) {
+			route.removeChild(route.firstChild);
+		}
+		exerciseRoute.forEach((item) => {
+			var div = document.createElement("div");
+			div.className = "countContainer";
+			div.id = item._id;
+
+			var count = document.createElement("p");
+			count.id = "count";
+			count.textContent =
+				1 + exerciseRoute.findIndex((count) => count._id === item._id);
+			div.appendChild(count);
+
+			var image = document.createElement("img");
+			image.src = item.id();
+			image.width = 75;
+			image.height = 52.5;
+			image.style.marginTop = "10px";
+			image.draggable = false;
+			div.appendChild(image);
+
+			route.appendChild(div);
+		});
+	}
+
+	updateNumbers();
 });
 
 window.addEventListener("click", () => {
@@ -569,4 +711,85 @@ function saveTrack() {
 		.catch(function (error) {
 			console.log(error);
 		});
+}
+
+var tooltip = new Konva.Label();
+tooltip.add(
+	new Konva.Tag({
+		fill: "black",
+		pointerDirection: "down",
+		pointerWidth: 10,
+		pointerHeight: 10,
+		lineJoin: "round",
+		shadowColor: "black",
+		shadowBlur: 10,
+		shadowOffsetX: 10,
+		shadowOffsetY: 10,
+		shadowOpacity: 0.5,
+	})
+);
+tooltip.add(
+	new Konva.Text({
+		text: "Beskrivelse af øvelsen",
+		fontFamily: "Calibri",
+		fontSize: 15,
+		padding: 5,
+		fill: "white",
+		id: "tooltipText",
+	})
+);
+tooltipLayer.add(tooltip);
+tooltip.hide();
+
+var exerciseRoute = [];
+function routeCount(exercise) {
+	if (exercise.id().includes("Start") || exercise.id().includes("M%C3%A5l")) {
+		return;
+	}
+	var route = document.getElementById("route");
+	while (route.firstChild) {
+		route.removeChild(route.firstChild);
+	}
+	exerciseRoute.push(exercise);
+	exerciseRoute.forEach((item) => {
+		var div = document.createElement("div");
+		div.className = "countContainer";
+		div.id = item._id;
+
+		var count = document.createElement("p");
+		count.id = "count";
+		count.textContent =
+			1 + exerciseRoute.findIndex((count) => count._id === item._id);
+		div.appendChild(count);
+
+		var image = document.createElement("img");
+		image.src = item.id();
+		image.width = 75;
+		image.height = 52.5;
+		image.style.marginTop = "10px";
+		image.style.marginLeft = "5px";
+		image.style.border = "3px solid orange";
+		image.draggable = false;
+		div.appendChild(image);
+
+		route.appendChild(div);
+	});
+
+	console.log(exerciseRoute);
+}
+
+function reRenderList() {
+	var count = document.querySelectorAll("#count");
+	var counter = 1;
+	count.forEach((node) => {
+		node.innerHTML = counter;
+		counter++;
+	});
+}
+
+function updateNumbers() {
+	exerciseRoute.forEach((item) => {
+		var text = stage.findOne("#" + item._id);
+		text.text(1 + exerciseRoute.findIndex((index) => index._id === item._id));
+	});
 }

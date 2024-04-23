@@ -19,7 +19,7 @@ public class HomeController : Controller
 		var db = client.GetDatabase("RallyBane").GetCollection<Exercise>("Exercises");
 
 		var filter = Builders<Exercise>.Filter.Empty;
-		var nodes = db.Find(filter).ToList();
+		var nodes = db.Find(filter).ToList().OrderBy(x => x.Number).ToList();
 		return View(nodes);
 	}
 
