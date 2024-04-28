@@ -16,7 +16,7 @@ public class HomeController : Controller
 	public IActionResult Index()
 	{
 		var client = new MongoClient("mongodb+srv://askelysgaard:1234@cluster0.avn6de9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0");
-		var db = client.GetDatabase("RallyBane").GetCollection<Exercise>("Exercises");
+		var db = client.GetDatabase("RallyBane").GetCollection<Exercise>("Exercise");
 
 		var filter = Builders<Exercise>.Filter.Empty;
 		var nodes = db.Find(filter).ToList().OrderBy(x => x.Number).ToList();

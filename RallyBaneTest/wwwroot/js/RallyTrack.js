@@ -1,7 +1,52 @@
-﻿//#region drag&drop DOM objects
+﻿const stageSize = { x: 1260, y: 820 };
+const GUIDELINE_OFFSET = 5;
+var arrowCounter = 0;
+var connectors = [];
+let track = [];
+var exerciseRoute = [];
 var itemUrl = "";
+var itemColor = "";
+
+// initiate stage
+var stage = new Konva.Stage({
+	container: "bane",
+	width: stageSize.x,
+	height: stageSize.y,
+});
+
+// initiate stage layers
+var backgroundLayer = new Konva.Layer({
+	name: "backgroundLayer",
+});
+var trackLayer = new Konva.Layer({
+	name: "trackLayer",
+});
+var transformLayer = new Konva.Layer({
+	name: "transformLayer",
+});
+var tooltipLayer = new Konva.Layer({
+	name: "tooltipLayer",
+});
+stage.add(backgroundLayer);
+stage.add(trackLayer);
+stage.add(tooltipLayer);
+stage.add(transformLayer);
+
+// background image
+Konva.Image.fromURL("/Images/Bane.png", (background) => {
+	background.setAttrs({
+		opacity: 0.3,
+		id: "background",
+		width: stage.width(),
+		height: stage.height(),
+	});
+	backgroundLayer.add(background);
+});
+
+//#region Create new image when dropping DOM objects on stage
 document.getElementById("exercises").addEventListener("dragstart", (e) => {
 	itemUrl = e.target.src;
+	setItemColor(e.target.id);
 });
 
 let items = document.querySelectorAll(".exercise");
@@ -21,112 +66,6 @@ document.getElementById("bane").addEventListener("ondragenter", () => {
 document.getElementById("bane").addEventListener("ondragleave", () => {
 	window.style.cursor = "default";
 });
-//#endregion
-
-let stageSize = { x: 1260, y: 820 };
-const GUIDELINE_OFFSET = 5;
-var arrowCounter = 1;
-let track = [];
-var labelcounter = 0;
-
-var stage = new Konva.Stage({
-	container: "bane",
-	width: stageSize.x,
-	height: stageSize.y,
-});
-
-var backgroundLayer = new Konva.Layer({
-	name: "backgroundLayer",
-});
-var trackLayer = new Konva.Layer({
-	name: "trackLayer",
-});
-var transformLayer = new Konva.Layer();
-var tooltipLayer = new Konva.Layer({
-	name: "tooltipLayer",
-});
-stage.add(backgroundLayer);
-stage.add(trackLayer);
-stage.add(tooltipLayer);
-stage.add(transformLayer);
-
-// Function for loading track from db
-async function fetchTrack() {
-	trackLayer.destroyChildren();
-	var name = document.getElementById("getName").value;
-	document.getElementById("getName").value = "";
-	console.log(name);
-	var response = await axios.get(`https://localhost:7213/tracks?name=${name}`);
-	track = response.data.nodes;
-
-	track.forEach((item) => {
-		switch (item.className) {
-			case "Image":
-				console.log(item);
-				Konva.Image.fromURL(item.url, (image) => {
-					image.setAttrs({
-						id: item.url,
-						width: 90,
-						height: 55,
-						draggable: true,
-						offsetX: 45,
-						offsetY: 27.5,
-						name: "object",
-						stroke: "orange",
-						strokeWidth: 4,
-						x: item.x,
-						y: item.y,
-						rotation: item.rotation,
-					});
-					trackLayer.add(image);
-					image.on("mouseenter", () => {
-						stage.container().style.cursor = "pointer";
-					});
-
-					image.on("mouseleave", () => {
-						stage.container().style.cursor = "default";
-					});
-				});
-				break;
-
-			case "Arrow":
-				var arrow = new Konva.Arrow({
-					fill: "black",
-					points: [0, 200, 0, 0],
-					pointerLength: 12,
-					pointerWidth: 8,
-					stroke: "black",
-					strokeWidth: 3,
-					draggable: true,
-					fillAfterStrokeEnabled: true,
-					hitStrokeWidth: 20,
-					id: "arrow" + arrowCounter,
-					x: item.x,
-					y: item.y,
-					rotation: item.rotation,
-				});
-				trackLayer.add(arrow);
-				arrow.on("mouseover", () => {
-					arrow.fill("white");
-					document.body.style.cursor = "pointer";
-				});
-				arrow.on("mouseout", () => {
-					arrow.fill("black");
-					document.body.style.cursor = "default";
-				});
-
-				arrow.on("transform", () => {
-					arrow.pointerLength(12 / arrow.scaleY());
-				});
-
-				arrowCounter++;
-			default:
-				break;
-		}
-	});
-}
-
-//#region Create new image when dropping DOM objects on stage
 var con = stage.container();
 con.addEventListener("dragover", (e) => {
 	e.preventDefault();
@@ -135,25 +74,27 @@ con.addEventListener("dragover", (e) => {
 con.addEventListener("drop", (e) => {
 	e.preventDefault();
 	stage.setPointersPositions(e);
-	// var group = new Konva.Group({
-	// 	draggable: true,
-	// });
+	createNode(itemUrl, stage.getPointerPosition(), itemColor);
+});
+//#endregion
 
-	Konva.Image.fromURL(itemUrl, (image) => {
+// function for creating exercise images
+function createNode(url, position, color) {
+	Konva.Image.fromURL(url, (image) => {
 		image.setAttrs({
-			id: itemUrl,
+			id: url,
 			width: 90,
 			height: 55,
 			offsetX: 45,
 			offsetY: 27.5,
 			name: "object",
-			stroke: "orange",
-			strokeWidth: 4,
+			stroke: color,
+			strokeWidth: 5,
 			draggable: true,
 		});
 
-		// group.add(image);
-		image.position(stage.getPointerPosition());
+		image.position(position);
+
 		trImage.nodes([image]);
 
 		image.on("mouseenter", () => {
@@ -166,39 +107,45 @@ con.addEventListener("drop", (e) => {
 			document.getElementById(image._id.toString()).style.borderColor = "white";
 		});
 
-		image.on("dragmove", () => {
-			var label = stage.findOne("#" + image._id).getParent();
-			label.position({ x: image.x(), y: image.y() });
-		});
+		if (!url.includes("Start") && !url.includes("Finish")) {
+			image.on("dragmove", () => {
+				var routeLabel = stage.findOne("#" + image._id).getParent();
+				var exerciseLabel = stage
+					.findOne("#" + getExerciseNumber(url) + image._id)
+					.getParent();
+				routeLabel.position({ x: image.x(), y: image.y() });
+				exerciseLabel.position({ x: image.x(), y: image.y() });
+			});
 
-		image.on("transform", () => {
-			var label = stage.findOne("#" + image._id).getParent();
-			label.rotation(image.rotation());
-		});
+			image.on("transform", () => {
+				var routeLabel = stage.findOne("#" + image._id).getParent();
+				var exerciseLabel = stage
+					.findOne("#" + getExerciseNumber(url) + image._id)
+					.getParent();
+				routeLabel.rotation(image.rotation());
+				exerciseLabel.rotation(image.rotation());
+			});
+		}
+
+		image.on("dragmove", () => updateConnectors(image));
 
 		routeCount(image);
 
-		if (!itemUrl.includes("Start") && !itemUrl.includes("M%C3%A5l")) {
-			// labeltest
-			var simpleLabel = new Konva.Label({
-				draggable: true,
+		if (!url.includes("Start") && !url.includes("Finish")) {
+			var routeLabel = new Konva.Label({
 				x: image.getAttr("x"),
 				y: image.getAttr("y"),
 				offset: { x: 50, y: 50 },
 			});
-			simpleLabel.add(
+			routeLabel.add(
 				new Konva.Tag({
 					fill: "yellow",
 					stroke: "black",
-					shadowColor: "black",
-					shadowBlur: 10,
-					shadowOffset: [10, 10],
-					shadowOpacity: 0.2,
 					lineJoin: "round",
 					cornerRadius: 5,
 				})
 			);
-			simpleLabel.add(
+			routeLabel.add(
 				new Konva.Text({
 					text: exerciseRoute.length,
 					fontFamily: "Calibri",
@@ -209,36 +156,37 @@ con.addEventListener("drop", (e) => {
 					id: image._id.toString(),
 				})
 			);
-			tooltipLayer.add(simpleLabel);
-			console.log(simpleLabel);
+			tooltipLayer.add(routeLabel);
+
+			var exerciseLabel = new Konva.Label({
+				x: image.getAttr("x"),
+				y: image.getAttr("y"),
+				offset: { x: -10, y: 50 },
+			});
+
+			exerciseLabel.add(
+				new Konva.Text({
+					text: getExerciseNumber(url),
+					fontFamily: "Calibri",
+					fontSize: 18,
+					fontStyle: "bold",
+					padding: 5,
+					fill: "black",
+					id: getExerciseNumber(url) + image._id,
+				})
+			);
+			tooltipLayer.add(exerciseLabel);
 		}
 
 		trackLayer.add(image);
+
+		createConnector();
+		return image;
 	});
-});
-//#endregion
+}
 
-window.addEventListener("keydown", function (e) {
-	if (e.key === "Delete") {
-		if (selectedNode.getLayer().getName() === "trackLayer") {
-			selectedNode.destroy();
-			tr.nodes([]);
-			trImage.nodes([]);
-		}
-	}
-});
-
-Konva.Image.fromURL("/Images/Bane.png", (background) => {
-	background.setAttrs({
-		opacity: 0.3,
-		id: "background",
-		width: stage.width(),
-		height: stage.height(),
-	});
-	backgroundLayer.add(background);
-});
-
-stage.on("dblclick", () => {
+// function for creating arrows
+function createArrow(position, rotation) {
 	var arrow = new Konva.Arrow({
 		fill: "black",
 		points: [0, 200, 0, 0],
@@ -250,8 +198,10 @@ stage.on("dblclick", () => {
 		fillAfterStrokeEnabled: true,
 		hitStrokeWidth: 20,
 		id: "arrow" + arrowCounter,
+		rotation: rotation,
+		name: "object",
 	});
-	arrow.position(stage.getPointerPosition());
+	arrow.position(position);
 	tr.nodes([arrow]);
 	trackLayer.add(arrow);
 
@@ -269,8 +219,14 @@ stage.on("dblclick", () => {
 	});
 
 	arrowCounter++;
+}
+
+// create arrow at mouse location on double click
+stage.on("dblclick", () => {
+	createArrow(stage.getPointerPosition(), 0);
 });
 
+//#region transformers
 var tr = new Konva.Transformer({
 	rotationSnaps: [0, 90, 180, 270, 45, 135, 225, 315],
 	rotationSnapTolerance: 22.5,
@@ -321,6 +277,61 @@ stage.on("click tap", function (e) {
 		return;
 	}
 });
+//#endregion
+
+//#region save&load
+// Function for loading track from db
+async function fetchTrack() {
+	trackLayer.destroyChildren();
+	var name = document.getElementById("getName").value;
+	document.getElementById("getName").value = "";
+	console.log(name);
+	var response = await axios.get(`https://localhost:7213/tracks?name=${name}`);
+	track = response.data.nodes;
+
+	track.forEach((item) => {
+		switch (item.className) {
+			case "Image":
+				createNode(item.url, { x: item.x, y: item.y });
+				break;
+
+			case "Arrow":
+				var arrow = createArrow({ x: item.x, y: item.y }, item.rotation);
+				arrowCounter++;
+				break;
+
+			default:
+				break;
+		}
+	});
+}
+
+function saveTrack() {
+	var name = document.getElementById("postName").value;
+	document.getElementById("postName").value = "";
+	track = [];
+	var children = trackLayer.getChildren();
+	children.forEach((child) => {
+		var id = child.getAttr("id");
+		var x = child.getAttr("x");
+		var y = child.getAttr("y");
+		var rotation = child.rotation();
+		var classname = child.className;
+		track.push({ url: id, x, y, rotation, classname });
+	});
+	var string = JSON.stringify(track);
+	const trackData = { nodes: track, name };
+	console.dir(trackData);
+	axios
+		.post("https://localhost:7213/tracks", trackData)
+		.then(function (response) {
+			console.dir(response.data);
+		})
+		.catch(function (error) {
+			console.log(error);
+		});
+}
+//#endregion
 
 //#region objectMenu
 let currentShape;
@@ -328,6 +339,7 @@ var menuNode = document.getElementById("menu");
 
 document.getElementById("delete-button").addEventListener("click", () => {
 	if (currentShape.className === "Text") {
+		console.log(currentShape);
 		currentShape.getParent().destroy();
 		return;
 	}
@@ -335,7 +347,7 @@ document.getElementById("delete-button").addEventListener("click", () => {
 	if (
 		currentShape.className != "Arrow" &&
 		currentShape.id().includes("Start") === false &&
-		currentShape.id().includes("M%C3%A5l") === false
+		currentShape.id().includes("Finish") === false
 	) {
 		var index = exerciseRoute.findIndex(
 			(item) => item.id() === currentShape.id()
@@ -353,12 +365,17 @@ document.getElementById("delete-button").addEventListener("click", () => {
 			.findOne("#" + currentShape._id)
 			.getParent()
 			.destroy();
+		stage
+			.findOne(
+				"#" + getExerciseNumber(currentShape.getAttr("id")) + currentShape._id
+			)
+			.destroy();
 		updateNumbers();
 	}
 });
 
 document.getElementById("info-button").addEventListener("click", () => {
-	tooltipLayer.findOne("#tooltipText").text("Beskrivelse af øvelsen her");
+	tooltipLayer.findOne("#tooltipText").text("Eksempel på info");
 	const { x, y } = currentShape.position();
 	tooltip.position({ x, y: y - 40 });
 	trImage.nodes([]);
@@ -373,33 +390,11 @@ document.getElementById("down-button").addEventListener("click", () => {
 	var moved = exerciseRoute.splice(index, 1);
 	exerciseRoute.splice(index + 1, 0, moved[0]);
 
-	var route = document.getElementById("route");
-	while (route.firstChild) {
-		route.removeChild(route.firstChild);
-	}
-	exerciseRoute.forEach((item) => {
-		var div = document.createElement("div");
-		div.className = "countContainer";
-		div.id = item._id;
-
-		var count = document.createElement("p");
-		count.id = "count";
-		count.textContent =
-			1 + exerciseRoute.findIndex((count) => count._id === item._id);
-		div.appendChild(count);
-
-		var image = document.createElement("img");
-		image.src = item.id();
-		image.width = 75;
-		image.height = 52.5;
-		image.style.marginTop = "10px";
-		image.draggable = false;
-		div.appendChild(image);
-
-		route.appendChild(div);
-	});
+	buildRoute();
 
 	updateNumbers();
+
+	updateConnectors(currentShape);
 });
 
 document.getElementById("up-button").addEventListener("click", () => {
@@ -410,34 +405,12 @@ document.getElementById("up-button").addEventListener("click", () => {
 		var moved = exerciseRoute.splice(index, 1);
 		exerciseRoute.splice(index - 1, 0, moved[0]);
 
-		var route = document.getElementById("route");
-		while (route.firstChild) {
-			route.removeChild(route.firstChild);
-		}
-		exerciseRoute.forEach((item) => {
-			var div = document.createElement("div");
-			div.className = "countContainer";
-			div.id = item._id;
-
-			var count = document.createElement("p");
-			count.id = "count";
-			count.textContent =
-				1 + exerciseRoute.findIndex((count) => count._id === item._id);
-			div.appendChild(count);
-
-			var image = document.createElement("img");
-			image.src = item.id();
-			image.width = 75;
-			image.height = 52.5;
-			image.style.marginTop = "10px";
-			image.draggable = false;
-			div.appendChild(image);
-
-			route.appendChild(div);
-		});
+		buildRoute();
 	}
 
 	updateNumbers();
+
+	updateConnectors(currentShape);
 });
 
 window.addEventListener("click", () => {
@@ -687,32 +660,7 @@ trackLayer.on("dragend", function (e) {
 });
 //#endregion
 
-function saveTrack() {
-	var name = document.getElementById("postName").value;
-	document.getElementById("postName").value = "";
-	track = [];
-	var children = trackLayer.getChildren();
-	children.forEach((child) => {
-		var id = child.getAttr("id");
-		var x = child.getAttr("x");
-		var y = child.getAttr("y");
-		var rotation = child.rotation();
-		var classname = child.className;
-		track.push({ url: id, x, y, rotation, classname });
-	});
-	var string = JSON.stringify(track);
-	const trackData = { nodes: track, name };
-	console.dir(trackData);
-	axios
-		.post("https://localhost:7213/tracks", trackData)
-		.then(function (response) {
-			console.dir(response.data);
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
-}
-
+//#region tooltip description
 var tooltip = new Konva.Label();
 tooltip.add(
 	new Konva.Tag({
@@ -730,7 +678,7 @@ tooltip.add(
 );
 tooltip.add(
 	new Konva.Text({
-		text: "Beskrivelse af øvelsen",
+		text: "",
 		fontFamily: "Calibri",
 		fontSize: 15,
 		padding: 5,
@@ -740,18 +688,24 @@ tooltip.add(
 );
 tooltipLayer.add(tooltip);
 tooltip.hide();
+//#endregion
 
-var exerciseRoute = [];
+//#region Route
 function routeCount(exercise) {
-	if (exercise.id().includes("Start") || exercise.id().includes("M%C3%A5l")) {
-		return;
-	}
+	exerciseRoute.push(exercise);
+
+	buildRoute();
+}
+
+function buildRoute() {
 	var route = document.getElementById("route");
 	while (route.firstChild) {
 		route.removeChild(route.firstChild);
 	}
-	exerciseRoute.push(exercise);
 	exerciseRoute.forEach((item) => {
+		if (item.id().includes("Start") || item.id().includes("Finish")) {
+			return;
+		}
 		var div = document.createElement("div");
 		div.className = "countContainer";
 		div.id = item._id;
@@ -762,27 +716,32 @@ function routeCount(exercise) {
 			1 + exerciseRoute.findIndex((count) => count._id === item._id);
 		div.appendChild(count);
 
+		var color = item.stroke();
+
 		var image = document.createElement("img");
 		image.src = item.id();
 		image.width = 75;
 		image.height = 52.5;
 		image.style.marginTop = "10px";
 		image.style.marginLeft = "5px";
-		image.style.border = "3px solid orange";
+		image.style.border = `3px solid ${color}`;
 		image.draggable = false;
 		div.appendChild(image);
 
+		var number = document.createElement("div");
+		number.className = "exerciseNumber";
+		number.innerHTML = getExerciseNumber(item.id());
+		div.appendChild(number);
+
 		route.appendChild(div);
 	});
-
-	console.log(exerciseRoute);
 }
 
 function reRenderList() {
-	var count = document.querySelectorAll("#count");
 	var counter = 1;
-	count.forEach((node) => {
-		node.innerHTML = counter;
+	var count = document.querySelectorAll("#count");
+	count.forEach((element) => {
+		element.innerHTML = counter;
 		counter++;
 	});
 }
@@ -792,4 +751,100 @@ function updateNumbers() {
 		var text = stage.findOne("#" + item._id);
 		text.text(1 + exerciseRoute.findIndex((index) => index._id === item._id));
 	});
+}
+//#endregion
+
+function setItemColor(id) {
+	switch (id) {
+		case "exercise1":
+			itemColor = "gold";
+			break;
+
+		case "exercise2":
+			itemColor = "darkred";
+			break;
+
+		case "exercise3":
+			itemColor = "darkgreen";
+			break;
+
+		case "exercise4":
+			itemColor = "darkblue";
+			break;
+
+		default:
+			break;
+	}
+}
+
+function getExerciseNumber(url) {
+	return url.slice(30, -4);
+}
+
+function createConnector() {
+	var connector = new Konva.Arrow({
+		id: connectors.length,
+		stroke: "black",
+		fill: "black",
+		name: "connector",
+		draggable: true,
+	});
+
+	connectors.push(connector);
+
+	if (exerciseRoute.length != 1) {
+		var sourceNode = exerciseRoute[connector.id() - 1];
+		var targetNode = exerciseRoute[connector.id()];
+
+		const dx = targetNode.x() - sourceNode.x();
+		const dy = targetNode.y() - sourceNode.y();
+		var angle = Math.atan2(-dy, dx);
+
+		const radiusX = 75;
+		const radiusY = 50;
+
+		var sourceNodeX = sourceNode.x() + -radiusX * Math.cos(angle + Math.PI);
+		var sourceNodeY = sourceNode.y() + radiusY * Math.sin(angle + Math.PI);
+		var targetNodeX = targetNode.x() + -radiusX * Math.cos(angle);
+		var targetNodeY = targetNode.y() + radiusY * Math.sin(angle);
+
+		connector.points([sourceNodeX, sourceNodeY, targetNodeX, targetNodeY]);
+
+		backgroundLayer.add(connector);
+	}
+}
+
+function updateConnectors(node) {
+	var index = exerciseRoute.findIndex((x) => x._id === node._id);
+	var connectorFrom = connectors[index + 1];
+	var connectorTo = connectors[index];
+
+	const radiusX = 75;
+	const radiusY = 50;
+
+	if (index != exerciseRoute.length - 1) {
+		var dx = exerciseRoute[index + 1].x() - exerciseRoute[index].x();
+		var dy = exerciseRoute[index + 1].y() - exerciseRoute[index].y();
+		var angle = Math.atan2(-dy, dx);
+
+		connectorFrom.points([
+			exerciseRoute[index].x() + -radiusX * Math.cos(angle + Math.PI),
+			exerciseRoute[index].y() + radiusY * Math.sin(angle + Math.PI),
+			exerciseRoute[index + 1].x() + -radiusX * Math.cos(angle),
+			exerciseRoute[index + 1].y() + radiusY * Math.sin(angle),
+		]);
+	}
+
+	if (index > 0) {
+		var dx = exerciseRoute[index].x() - exerciseRoute[index - 1].x();
+		var dy = exerciseRoute[index].y() - exerciseRoute[index - 1].y();
+		var angle = Math.atan2(-dy, dx);
+
+		connectorTo.points([
+			exerciseRoute[index - 1].x() + -radiusX * Math.cos(angle + Math.PI),
+			exerciseRoute[index - 1].y() + radiusY * Math.sin(angle + Math.PI),
+			exerciseRoute[index].x() + -radiusX * Math.cos(angle),
+			exerciseRoute[index].y() + radiusY * Math.sin(angle),
+		]);
+	}
 }
