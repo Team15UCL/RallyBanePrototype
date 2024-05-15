@@ -731,6 +731,7 @@ function buildRoute() {
 		var number = document.createElement("div");
 		number.className = "exerciseNumber";
 		number.innerHTML = getExerciseNumber(item.id());
+		number.style.color = `${color}`;
 		div.appendChild(number);
 
 		route.appendChild(div);
