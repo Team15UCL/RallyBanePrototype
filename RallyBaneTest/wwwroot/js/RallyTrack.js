@@ -1,20 +1,23 @@
-﻿const stageSize = { x: 1260, y: 820 };
-const GUIDELINE_OFFSET = 5;
+﻿const STAGE_SIZE = { x: 1260, y: 820 };
 var arrowCounter = 0;
 var connectors = [];
-let track = [];
+var track = [];
 var exerciseRoute = [];
 var itemUrl = "";
 var itemColor = "";
 
-// initiate stage
+//
+// Initialize a Konva Stage on the DOM using the div element with id: "bane"
+//
 var stage = new Konva.Stage({
 	container: "bane",
-	width: stageSize.x,
-	height: stageSize.y,
+	width: STAGE_SIZE.x,
+	height: STAGE_SIZE.y,
 });
 
-// initiate stage layers
+//
+// Initialize stage layers
+//
 var backgroundLayer = new Konva.Layer({
 	name: "backgroundLayer",
 });
@@ -32,7 +35,9 @@ stage.add(trackLayer);
 stage.add(tooltipLayer);
 stage.add(transformLayer);
 
-// background image
+//
+// Create image to use as background for stage
+//
 Konva.Image.fromURL("/Images/Bane.png", (background) => {
 	background.setAttrs({
 		opacity: 0.3,
@@ -44,13 +49,20 @@ Konva.Image.fromURL("/Images/Bane.png", (background) => {
 });
 
 //#region Create new image when dropping DOM objects on stage
+
+//
+// Gets the border color and url from dragged item
+//
 document.getElementById("exercises").addEventListener("dragstart", (e) => {
 	itemUrl = e.target.src;
 	setItemColor(e.target.id);
 });
 
-let items = document.querySelectorAll(".exercise");
-items.forEach(function (item) {
+//
+// Makes grabbed item opaque
+//
+let draggableItems = document.querySelectorAll(".exercise");
+draggableItems.forEach(function (item) {
 	item.addEventListener("dragstart", () => {
 		item.style.opacity = "0.4";
 	});
@@ -59,18 +71,23 @@ items.forEach(function (item) {
 	});
 });
 
+//
+// Sets cursor to show where draggables can be dropped
+//
 document.getElementById("bane").addEventListener("ondragenter", () => {
 	window.style.cursor = "no-drop";
 });
-
 document.getElementById("bane").addEventListener("ondragleave", () => {
 	window.style.cursor = "default";
 });
+
+//
+// Logic for creating a Konva object when item is dropped on stage
+//
 var con = stage.container();
 con.addEventListener("dragover", (e) => {
 	e.preventDefault();
 });
-
 con.addEventListener("drop", (e) => {
 	e.preventDefault();
 	stage.setPointersPositions(e);
@@ -78,40 +95,43 @@ con.addEventListener("drop", (e) => {
 });
 //#endregion
 
-// function for creating exercise images
-function createNode(url, position, color) {
-	Konva.Image.fromURL(url, (image) => {
+//
+// Function for creating exercise objects on stage
+//
+function createNode(imageUrl, position, borderColor) {
+	Konva.Image.fromURL(imageUrl, (image) => {
 		image.setAttrs({
-			id: url,
+			id: imageUrl,
 			width: 90,
 			height: 55,
 			offsetX: 45,
 			offsetY: 27.5,
 			name: "object",
-			stroke: color,
+			stroke: borderColor,
 			strokeWidth: 5,
 			draggable: true,
 		});
 
 		image.position(position);
 
+		// Pass created Node to transformer on creation
 		trImage.nodes([image]);
 
 		image.on("mouseenter", () => {
 			stage.container().style.cursor = "pointer";
-			document.getElementById(image._id.toString()).style.borderColor = "black";
 		});
-
 		image.on("mouseleave", () => {
 			stage.container().style.cursor = "default";
-			document.getElementById(image._id.toString()).style.borderColor = "white";
 		});
 
-		if (!url.includes("Start") && !url.includes("Finish")) {
+		//
+		// Make associated labels move together with the node
+		//
+		if (!imageUrl.includes("Start") && !imageUrl.includes("Finish")) {
 			image.on("dragmove", () => {
 				var routeLabel = stage.findOne("#" + image._id).getParent();
 				var exerciseLabel = stage
-					.findOne("#" + getExerciseNumber(url) + image._id)
+					.findOne("#" + getExerciseNumber(imageUrl) + image._id)
 					.getParent();
 				routeLabel.position({ x: image.x(), y: image.y() });
 				exerciseLabel.position({ x: image.x(), y: image.y() });
@@ -120,18 +140,22 @@ function createNode(url, position, color) {
 			image.on("transform", () => {
 				var routeLabel = stage.findOne("#" + image._id).getParent();
 				var exerciseLabel = stage
-					.findOne("#" + getExerciseNumber(url) + image._id)
+					.findOne("#" + getExerciseNumber(imageUrl) + image._id)
 					.getParent();
 				routeLabel.rotation(image.rotation());
 				exerciseLabel.rotation(image.rotation());
 			});
 		}
 
-		image.on("dragmove", () => updateConnectors(image));
+		image.on("dragmove", () => updateConnectors(image)); // Update connector arrows when moving node
 
+		// pass the node to the route array
 		routeCount(image);
 
-		if (!url.includes("Start") && !url.includes("Finish")) {
+		//
+		// Create exercise number and route order labels
+		//
+		if (!imageUrl.includes("Start") && !imageUrl.includes("Finish")) {
 			var routeLabel = new Konva.Label({
 				x: image.getAttr("x"),
 				y: image.getAttr("y"),
@@ -163,16 +187,15 @@ function createNode(url, position, color) {
 				y: image.getAttr("y"),
 				offset: { x: -10, y: 50 },
 			});
-
 			exerciseLabel.add(
 				new Konva.Text({
-					text: getExerciseNumber(url),
+					text: getExerciseNumber(imageUrl),
 					fontFamily: "Calibri",
 					fontSize: 18,
 					fontStyle: "bold",
 					padding: 5,
 					fill: "black",
-					id: getExerciseNumber(url) + image._id,
+					id: getExerciseNumber(imageUrl) + image._id,
 				})
 			);
 			tooltipLayer.add(exerciseLabel);
@@ -180,6 +203,7 @@ function createNode(url, position, color) {
 
 		trackLayer.add(image);
 
+		// Create connector arrow
 		createConnector();
 		return image;
 	});
@@ -280,6 +304,46 @@ stage.on("click tap", function (e) {
 //#endregion
 
 //#region save&load
+
+async function saveTrack() {
+	let name = document.getElementById("postName").value;
+	let theme = "Test Bane";
+	let location = "Danmark";
+
+	track = [];
+	let placedExercises = trackLayer.getChildren();
+	placedExercises.map(createExerciseList);
+
+	const objectToSend = {
+		name,
+		theme,
+		location,
+		nodes: track,
+	};
+
+	axios
+		.post(
+			"https://localhost:7092/track?username=aske&userrole=instructor",
+			objectToSend
+		)
+		.then(function (response) {
+			console.dir(response.data);
+		})
+		.catch(function (error) {
+			console.log(error);
+		});
+}
+
+function createExerciseList(item) {
+	track.push({
+		url: item.getAttr("id"),
+		x: item.getAttr("x"),
+		y: item.getAttr("y"),
+		rotation: item.rotation(),
+		classname: item.className,
+	});
+}
+
 // Function for loading track from db
 async function fetchTrack() {
 	trackLayer.destroyChildren();
@@ -306,31 +370,29 @@ async function fetchTrack() {
 	});
 }
 
-function saveTrack() {
-	var name = document.getElementById("postName").value;
-	document.getElementById("postName").value = "";
-	track = [];
-	var children = trackLayer.getChildren();
-	children.forEach((child) => {
-		var id = child.getAttr("id");
-		var x = child.getAttr("x");
-		var y = child.getAttr("y");
-		var rotation = child.rotation();
-		var classname = child.className;
-		track.push({ url: id, x, y, rotation, classname });
-	});
-	var string = JSON.stringify(track);
-	const trackData = { nodes: track, name };
-	console.dir(trackData);
-	axios
-		.post("https://localhost:7213/tracks", trackData)
-		.then(function (response) {
-			console.dir(response.data);
-		})
-		.catch(function (error) {
-			console.log(error);
-		});
-}
+// function saveTrack() {
+// 	var name = document.getElementById("postName").value;
+// 	document.getElementById("postName").value = "";
+// 	track = [];
+// 	var children = trackLayer.getChildren();
+// 	children.forEach((child) => {
+// 		var id = child.getAttr("id");
+// 		var x = child.getAttr("x");
+// 		var y = child.getAttr("y");
+// 		var rotation = child.rotation();
+// 		var classname = child.className;
+// 		track.push({ url: id, x, y, rotation, classname });
+// 	});
+// 	const trackData = { nodes: track, name };
+// 	axios
+// 		.post("https://localhost:7213/tracks", trackData)
+// 		.then(function (response) {
+// 			console.dir(response.data);
+// 		})
+// 		.catch(function (error) {
+// 			console.log(error);
+// 		});
+// }
 //#endregion
 
 //#region objectMenu
@@ -371,6 +433,7 @@ document.getElementById("delete-button").addEventListener("click", () => {
 			)
 			.destroy();
 		updateNumbers();
+		updateConnectors();
 	}
 });
 
@@ -507,7 +570,7 @@ function getGuides(lineGuideStops, itemBounds) {
 	lineGuideStops.vertical.forEach((lineGuide) => {
 		itemBounds.vertical.forEach((itemBound) => {
 			var diff = Math.abs(lineGuide - itemBound.guide);
-			if (diff < GUIDELINE_OFFSET) {
+			if (diff < 5) {
 				resultV.push({
 					lineGuide: lineGuide,
 					diff: diff,
@@ -521,7 +584,7 @@ function getGuides(lineGuideStops, itemBounds) {
 	lineGuideStops.horizontal.forEach((lineGuide) => {
 		itemBounds.horizontal.forEach((itemBound) => {
 			var diff = Math.abs(lineGuide - itemBound.guide);
-			if (diff < GUIDELINE_OFFSET) {
+			if (diff < 5) {
 				resultH.push({
 					lineGuide: lineGuide,
 					diff: diff,
@@ -757,6 +820,10 @@ function updateNumbers() {
 
 function setItemColor(id) {
 	switch (id) {
+		case "startfinish":
+			itemColor = "black";
+			break;
+
 		case "exercise1":
 			itemColor = "gold";
 			break;

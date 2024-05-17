@@ -58,8 +58,8 @@
 			<div id="exercises" class="grid-container">
 				<div>
 					<h3>Start & Mål</h3>
-					<img class="exercise" src="/Images/Start.png" height="52,5" width="75" draggable="true" />
-					<img class="exercise" src="/Images/Finish.png" height="52,5" width="75" draggable="true" />
+					<img class="exercise" id="startfinish" src="/Images/Start.png" height="52,5" width="75" draggable="true" />
+					<img class="exercise" id="startfinish" src="/Images/Finish.png" height="52,5" width="75" draggable="true" />
 					@foreach (var item in Model.DistinctBy(x => x.Class))
 					{	
 						<hr />

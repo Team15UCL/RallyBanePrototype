@@ -58,6 +58,10 @@
 	transition: width 0.5s;
 }
 
+#startfinish {
+	border: 2px solid black;
+}
+
 #exercise1 {
 	border: 2px solid gold;
 }
